@@ -10,6 +10,7 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
+PURPLE = (125, 0, 255)
 
 # Screen dimensions
 width, height = 800, 600
@@ -69,11 +70,23 @@ class Cell:
       return None
 
   # Highlight the current cell
+  
+  #!! Perhaps here too it will be x + 1, y + 1, w + 1, w + 1
   def highlight(self):
     x = self.i * w
     y = self.j * w
     pygame.draw.rect(screen, BLACK, (x, y, w, w))
 
+  def hightlight_goal(self):
+    x = self.i * w
+    y = self.j * w
+    pygame.draw.rect(screen, RED, (x, y, w, w))
+    
+  def dfs_highlight(self):
+    x = self.i * w
+    y = self.j * w
+    pygame.draw.rect(screen, PURPLE, (x, y, w, w))
+    
   # Show cell and its walls
   def show(self):
     x = self.i * w
@@ -94,7 +107,6 @@ class Cell:
       pygame.draw.rect(screen, GREEN, (x  + 1, y + 1, w + 1, w + 1))
       ### TODO:
       #Used a bit of a hack here, I have shifted the cells coloring by one pixel so that one of the overlapping cell's wall is seen while the other one gets covered, this should be fixed by separating the cells and their walls, and not having them overlap, of by taking the walls inside the cell
-
 
 # Remove walls between two cells
 def remove_walls(a, b):
@@ -123,6 +135,67 @@ for j in range(rows):
 # Set starting point
 current = grid[0]
 
+# Set endpoint
+goal_cell = random.choice(grid)
+
+#def DFS(current_cell = grid[0], dfs_visited = None):
+  #if dfs_visited is None:
+    #dfs_visited = []
+
+  #if current_cell is goal_cell:
+    #return
+  
+  #dfs_visited.append(current_cell)
+  
+  #top = current_cell.index(current_cell.i, current_cell.j - 1)
+  #right = current_cell.index(current_cell.i + 1, current_cell.j)
+  #bottom = current_cell.index(current_cell.i, current_cell.j + 1)
+  #left = current_cell.index(current_cell.i - 1, current_cell.j)
+  
+  #directions = [top, right, bottom, left]
+  
+  #random.shuffle(directions)
+  
+  #for direction in directions:
+    #new_cell = direction
+    #if new_cell.index(new_cell.i, new_cell.j) is not None and new_cell not in dfs_visited:
+      #DFS(new_cell, dfs_visited)
+      #new_cell.dfs_highlight()
+      #pygame.display.update()
+
+dfs_visited = []
+current_cell = grid[0]
+def DFS_step():
+  global currennt_cell
+  if current_cell == goal_cell:
+    return
+  
+  dfs_visited.append(current_cell)
+  current_cell.dfs_highlight()
+  
+  top = current_cell.index(current_cell.i, current_cell.j - 1)
+  right = current_cell.index(current_cell.i + 1, current_cell.j)
+  bottom = current_cell.index(current_cell.i, current_cell.j + 1)
+  left = current_cell.index(current_cell.i - 1, current_cell.j)
+  
+  directions = [top, right, bottom, left]
+  
+  random.shuffle(directions)
+  
+  new_cell = None
+  
+  for direction in directions:
+    if direction is not None:
+      if direction is top and not current_cell.walls[0]:
+        new_cell = grid[direction]
+      elif direction is right and not current_cell.walls[1]:
+        new_cell = grid[direction]
+      elif direction is bottom and not current_cell.walls[2]:
+        new_cell = grid[direction]
+      elif direction is left and not current_cell.walls[3]:
+        new_cell = grid[direction] 
+  current_cell = new_cell
+  
 # Main loop
 while True:
   for event in pygame.event.get():
@@ -158,6 +231,11 @@ while True:
     # Backtrack if no neighbors
     current = stack.pop()
 
+  if len(stack) == 0:
+    # Choose a random cell to be the goal, if you want to highlight the last cell, change this line from being the random cell to being the last cell
+    goal_cell.hightlight_goal()
+    DFS_step()
+  
   # Update the screen
   pygame.display.update()
   clock.tick(60)
